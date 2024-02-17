@@ -395,6 +395,7 @@ def driveState():
     if (drive.odometry.getXMeters() < 0.3048):
         drive.applySpeeds(0, 0.05, 0, True)
     else:
+        drive.stop()
         state = 1
 
 def robotPeriodic():
