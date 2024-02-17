@@ -20,7 +20,7 @@ brain.screen.print("Hello V5")
 
 
 class DevicePorts:
-    FL_DRIVE = Ports.PORT15
+    FL_DRIVE = Ports.PORT19
     FR_DRIVE = Ports.PORT10
     BL_DRIVE = Ports.PORT20
     BR_DRIVE = Ports.PORT9
@@ -382,17 +382,27 @@ class Gate:
 
 
 
-
-
-
-
 drive = Drive()
 lift = Lift()
 gate = Gate()
 
 timer = Timer()
 
+state = 0
+
+def driveState():
+    global state
+    if (drive.odometry.getXMeters() < 0.3048):
+        drive.applySpeeds(0, 0.05, 0, True)
+    else:
+        state = 1
+
 def robotPeriodic():
+    drive.periodic()
+    if (state == 0):
+        driveState()
+    if (state == 1):
+        pass
     timer.event(robotPeriodic, Constants.LOOP_PERIOD_MSECS)
 
 
