@@ -20,18 +20,17 @@ brain.screen.print("Hello V5")
 
 
 class DevicePorts:
-    FL_DRIVE = Ports.PORT19
-    FR_DRIVE = Ports.PORT20
-    BL_DRIVE = Ports.PORT10
+    FL_DRIVE = Ports.PORT15
+    FR_DRIVE = Ports.PORT10
+    BL_DRIVE = Ports.PORT20
     BR_DRIVE = Ports.PORT9
 
-    GYRO = Ports.PORT5
+    GYRO = Ports.PORT8
 
-    LEFT_LIFT = Ports.PORT11
-    RIGHT_LIFT = Ports.PORT12
+    LEFT_LIFT = Ports.PORT18
+    RIGHT_LIFT = Ports.PORT7
 
-    LEFT_GATE = Ports.PORT15
-    RIGHT_GATE = Ports.PORT16
+    GATE = Ports.PORT6
 
 
 
@@ -66,6 +65,8 @@ class Constants:
 
         ODOM_Y_DRIFT_PER_POSITIVE_X_TRANSLATION = -12 / 200
         ODOM_Y_DRIFT_PER_NEGATIVE_X_TRANSLATION = 18 / 200
+
+        LIFT_SPEED = 150
 
 
 
@@ -305,15 +306,18 @@ class Drive:
 
 
 class Lift:
-    leftLift = Motor(DevicePorts.LEFT_LIFT, True)
+    leftLift = Motor(DevicePorts.LEFT_LIFT, False)
     rightLift = Motor(DevicePorts.RIGHT_LIFT, True)
 
     PINION_CIRCUMFERENCE_IN = 0.5
 
     STOW_POSITION = 0.0
-    LOW_POSITION = 0.0
-    MID_POSITION = 0.0
-    HIGH_POSITION = 0.0
+    LOW_POSITION = 0.5
+    MID_POSITION = 3.0
+    HIGH_POSITION = 5.5
+
+    leftLift.set_velocity(Constants.LIFT_SPEED, RPM)
+    rightLift.set_velocity(Constants.LIFT_SPEED, RPM)
 
     Kp = 0
 
@@ -324,20 +328,20 @@ class Lift:
         pass
 
     def setStowPosition(self):
-        self.leftLift.spin_to_position(self.STOW_POSITION, TURNS)
-        self.rightLift.spin_to_position(self.STOW_POSITION, TURNS)
+        self.leftLift.spin_to_position(self.STOW_POSITION, TURNS, False)
+        self.rightLift.spin_to_position(self.STOW_POSITION, TURNS, False)
 
     def setLowPosition(self):
-        self.leftLift.spin_to_position(self.LOW_POSITION, TURNS)
-        self.rightLift.spin_to_position(self.LOW_POSITION, TURNS)
+        self.leftLift.spin_to_position(self.LOW_POSITION, TURNS, False)
+        self.rightLift.spin_to_position(self.LOW_POSITION, TURNS, False)
 
     def setMidPosition(self):
-        self.leftLift.spin_to_position(self.MID_POSITION, TURNS)
-        self.rightLift.spin_to_position(self.MID_POSITION, TURNS)
+        self.leftLift.spin_to_position(self.MID_POSITION, TURNS, False)
+        self.rightLift.spin_to_position(self.MID_POSITION, TURNS, False)
 
     def setHighPosition(self):
-        self.leftLift.spin_to_position(self.HIGH_POSITION, TURNS)
-        self.rightLift.spin_to_position(self.HIGH_POSITION, TURNS)
+        self.leftLift.spin_to_position(self.HIGH_POSITION, TURNS, False)
+        self.rightLift.spin_to_position(self.HIGH_POSITION, TURNS, False)
 
     def stop(self):
         self.leftLift.stop()
@@ -346,11 +350,12 @@ class Lift:
 
 
 class Gate:
-    leftGate = Motor(DevicePorts.LEFT_GATE, True)
-    rightGate = Motor(DevicePorts.RIGHT_GATE, False)
+    leftGate = Motor(DevicePorts.GATE, False)
 
+
+    # DEGREES
     LOCKED_POSITION = 0.0
-    UNLOCKED_POSITION = 0.0
+    UNLOCKED_POSITION = 90.0
 
     def __init__(self) -> None:
         pass
@@ -359,12 +364,10 @@ class Gate:
         pass
 
     def setLockedPosition(self):
-        self.leftGate.spin_to_position(self.LOCKED_POSITION, TURNS)
-        self.rightGate.spin_to_position(self.LOCKED_POSITION, TURNS)
+        self.leftGate.spin_to_position(self.LOCKED_POSITION, DEGREES)
 
     def setUnlockedPosition(self):
-        self.leftGate.spin_to_position(self.UNLOCKED_POSITION, TURNS)
-        self.rightGate.spin_to_position(self.UNLOCKED_POSITION, TURNS)
+        self.leftGate.spin_to_position(self.UNLOCKED_POSITION, DEGREES)
 
 
 
@@ -393,4 +396,10 @@ def robotPeriodic():
     timer.event(robotPeriodic, Constants.LOOP_PERIOD_MSECS)
 
 
+
+
+
+
+
+# execute main loop
 robotPeriodic()
