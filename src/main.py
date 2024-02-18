@@ -311,8 +311,8 @@ class Lift:
 
     PINION_CIRCUMFERENCE_IN = 0.5
 
-    STOW_POSITION = 0.0
-    LOW_POSITION = 0.5
+    STOW_POSITION = 0.025
+    LOW_POSITION = 0.15
     MID_POSITION = 3.0
     HIGH_POSITION = 5.5
 
@@ -329,19 +329,19 @@ class Lift:
 
     def setStowPosition(self):
         self.leftLift.spin_to_position(self.STOW_POSITION, TURNS, False)
-        self.rightLift.spin_to_position(self.STOW_POSITION, TURNS, False)
+        self.rightLift.spin_to_position(self.STOW_POSITION, TURNS, True)
 
     def setLowPosition(self):
         self.leftLift.spin_to_position(self.LOW_POSITION, TURNS, False)
-        self.rightLift.spin_to_position(self.LOW_POSITION, TURNS, False)
+        self.rightLift.spin_to_position(self.LOW_POSITION, TURNS, True)
 
     def setMidPosition(self):
         self.leftLift.spin_to_position(self.MID_POSITION, TURNS, False)
-        self.rightLift.spin_to_position(self.MID_POSITION, TURNS, False)
+        self.rightLift.spin_to_position(self.MID_POSITION, TURNS, True)
 
     def setHighPosition(self):
         self.leftLift.spin_to_position(self.HIGH_POSITION, TURNS, False)
-        self.rightLift.spin_to_position(self.HIGH_POSITION, TURNS, False)
+        self.rightLift.spin_to_position(self.HIGH_POSITION, TURNS, True)
 
     def stop(self):
         self.leftLift.stop()
@@ -393,17 +393,72 @@ state = 0
 def driveState():
     global state
     if (drive.odometry.getXMeters() < 0.3048):
-        drive.applySpeeds(0, 0.05, 0, True)
+        drive.applySpeeds(0, 0.15, 0, True)
     else:
         drive.stop()
         state = 1
 
+def liftState():
+    global state
+    lift.setMidPosition()
+    lift.stop()
+    state = 2
+
+def approachState():
+    global state
+    if (drive.odometry.getXMeters() < 0.5):
+        drive.applySpeeds(0, 0.05, 0, True)
+    else:
+        drive.stop()
+        state = 3
+
+def collectState():
+    global state
+    lift.setStowPosition()
+    lift.stop()
+    state = 4
+
+def returnState():
+    global state
+    if (drive.odometry.getXMeters() > 0.01):
+        drive.applySpeeds(math.pi, 0.2, 0, True)
+    else:
+        drive.stop()
+        state = 5
+
+def depositState():
+    global state
+    if (gate.leftGate.position(DEGREES) < gate.UNLOCKED_POSITION):
+        gate.setUnlockedPosition()
+    else:
+        state = 6
+
+def resetState():
+    global state
+    if (gate.leftGate.position(DEGREES) > gate.LOCKED_POSITION):
+        gate.setLockedPosition()
+    else:
+        state = 7
+
 def robotPeriodic():
     drive.periodic()
+    lift.periodic()
+    gate.periodic()
     if (state == 0):
         driveState()
     if (state == 1):
-        pass
+        liftState()
+    if (state == 2):
+        approachState()
+    if (state == 3):
+        collectState()
+    if (state == 4):
+        returnState()
+    if (state == 5):
+        depositState()
+    if (state == 6):
+        resetState()
+    
     timer.event(robotPeriodic, Constants.LOOP_PERIOD_MSECS)
 
 
@@ -413,4 +468,8 @@ def robotPeriodic():
 
 
 # execute main loop
+drive.gyro.calibrate()
+while (drive.gyro.is_calibrating()):
+    pass
+
 robotPeriodic()
